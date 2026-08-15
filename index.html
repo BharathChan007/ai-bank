@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;color:#111827;min-height:100vh}
+body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;color:#111827;min-height:100vh}
 button{cursor:pointer;font-family:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 
@@ -82,11 +82,11 @@ button{cursor:pointer;font-family:inherit}
 .spin{display:inline-block;animation:spin .8s linear infinite}
 .pulse-anim{animation:pulse 1.2s infinite}
 
-/* ── Loading screen ── */
-.load-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0F2044;color:#fff}
-.load-box{text-align:center;padding:32px;width:100%;max-width:420px}
+/* ── Loading screen — love theme ── */
+.load-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#C87872;color:#5D2E2A;position:relative;overflow:hidden}
+.load-box{text-align:center;padding:32px;width:100%;max-width:440px;position:relative;z-index:5}
 .load-icon{font-size:52px;margin-bottom:12px}
-.load-section{background:rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;text-align:left}
+.load-section{background:rgba(253,234,224,.9);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;text-align:left;border:1px solid rgba(200,100,90,.2);box-shadow:0 2px 8px rgba(150,60,50,.1)}
 
 /* ── Select ── */
 select{padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;background:#fff;color:#111827;width:100%}
@@ -1026,45 +1026,76 @@ function renderLoading() {
   const prov = PROVIDERS[CURRENT_PROVIDER];
   const doneN = loadStatus.filter(s => s === 'done').length;
   const pct = loadStatus.length ? doneN / loadStatus.length * 100 : 0;
-  const icons = { pending: '○', loading: '⟳', done: '✓', error: '✗' };
-  const iconColors = { pending: '#9CA3AF', loading: '#93C5FD', done: '#34D399', error: '#F87171' };
-  return div({ class: 'load-screen' },
-    div({ class: 'load-box' },
-      div({ class: 'load-icon' }, loadRetryIn > 0 ? '⏳' : '🤖'),
-      el('h2', { style: { fontSize: '22px', fontWeight: 700, marginBottom: '6px' } },
-        loadRetryIn > 0 ? 'Rate limit — waiting…' : 'Generating questions'
-      ),
-      loadRetryIn > 0
-        ? div(null,
-            p({ style: { opacity: .8, marginBottom: '8px', fontSize: '13px', color: '#FCD34D' } }, loadRetryMsg),
-            div({ style: { fontSize: '42px', fontWeight: 800, marginBottom: '16px', color: '#F59E0B', fontFamily: 'monospace' } }, loadRetryIn + 's'),
-            div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
-              div({ class: 'pb-fill', style: { width: '100%', background: '#F59E0B', animation: 'pulse 1s infinite' } })
-            )
+
+  const icons  = { pending: '○', loading: '⟳', done: '✓', error: '✗' };
+  const iColor = { pending: '#C49090', loading: '#C84B43', done: '#059669', error: '#DC2626' };
+
+  // Floating heart particles background
+  const hch = ['💕','💖','💗','💓','💝'];
+  const particles = Array.from({ length: 14 }, (_, i) => {
+    const h = document.createElement('span');
+    h.className = 'hprt';
+    h.textContent = hch[i % hch.length];
+    h.style.cssText = `left:${Math.random()*100}vw;bottom:-50px;font-size:${9+Math.random()*14}px;animation-duration:${5+Math.random()*8}s;animation-delay:${Math.random()*8}s;opacity:.7`;
+    return h;
+  });
+
+  // Dashed heart decorations
+  const decoDiv = document.createElement('div');
+  decoDiv.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1';
+  decoDiv.innerHTML = `
+    <svg style="position:absolute;top:20px;left:18px;width:70px;opacity:.4" viewBox="0 0 100 88">
+      <path d="M50 76 C50 76 8 50 8 24 C8 10 22 4 33 10 C41 14 50 24 50 24 C50 24 59 14 67 10 C78 4 92 10 92 24 C92 50 50 76 50 76Z" fill="none" stroke="#FDEAE0" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>
+    <svg style="position:absolute;bottom:24px;right:18px;width:52px;opacity:.3" viewBox="0 0 100 88">
+      <path d="M50 76 C50 76 8 50 8 24 C8 10 22 4 33 10 C41 14 50 24 50 24 C50 24 59 14 67 10 C78 4 92 10 92 24 C92 50 50 76 50 76Z" fill="none" stroke="#FDEAE0" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>`;
+
+  const screen = div({ class: 'load-screen' });
+  particles.forEach(p => screen.appendChild(p));
+  screen.appendChild(decoDiv);
+
+  const box = div({ class: 'load-box' },
+    div({ class: 'load-icon' }, loadRetryIn > 0 ? '⏳' : '💖'),
+    el('h2', { style: { fontSize: '24px', fontWeight: 800, marginBottom: '6px', fontFamily: "'Pacifico', cursive", color: '#FDEAE0' } },
+      loadRetryIn > 0 ? 'Hold on, my love…' : 'Crafting your exam!'
+    ),
+    loadRetryIn > 0
+      ? div(null,
+          p({ style: { marginBottom: '8px', fontSize: '13px', color: '#FDEAE0', fontWeight: 600 } }, loadRetryMsg),
+          div({ style: { fontSize: '42px', fontWeight: 800, marginBottom: '16px', color: '#FDEAE0', fontFamily: 'monospace' } }, loadRetryIn + 's'),
+          div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px', background: 'rgba(253,234,224,.3)' } },
+            div({ style: { height: '100%', borderRadius: '99px', background: '#FDEAE0', width: '100%', animation: 'pulse 1s infinite' } })
           )
-        : div(null,
-            p({ style: { opacity: .6, marginBottom: '4px', fontSize: '13px' } }, `Crafting fresh questions for ${exam.name}…`),
-            p({ style: { opacity: .4, marginBottom: '20px', fontSize: '11px' } }, `via ${prov.name} · ${getCurrentModel()}`),
-            div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
-              div({ class: 'pb-fill', style: { width: pct + '%', background: '#F59E0B' } })
-            )
-          ),
-      exam.sections.map((s, i) => {
-        const st = loadStatus[i] || 'pending';
-        return div({ class: 'load-section' },
-          span({ style: { fontSize: '18px', color: iconColors[st], animation: st === 'loading' ? 'spin .8s linear infinite' : '', display: 'inline-block', width: '24px', textAlign: 'center' } }, icons[st]),
-          div({ style: { flex: 1 } },
-            div({ style: { fontWeight: 600, fontSize: '14px' } }, s.name),
-            div({ style: { opacity: .5, fontSize: '12px' } }, s.count + ' questions')
-          ),
-          span({ style: { fontSize: '12px', opacity: .6 } }, st === 'loading' ? 'Generating…' : st === 'done' ? 'Ready' : st === 'error' ? 'Failed' : 'Queued')
-        );
-      }),
-      loadError && div({ style: { marginTop: '14px', padding: '12px', background: 'rgba(239,68,68,.2)', border: '1px solid rgba(239,68,68,.4)', borderRadius: '8px', fontSize: '13px', color: '#FCA5A5' } },
-        '⚠️ ' + loadError + ' — refresh to retry.'
-      )
+        )
+      : div(null,
+          p({ style: { color: 'rgba(253,234,224,.75)', marginBottom: '3px', fontSize: '13px', fontFamily: "'Dancing Script', cursive", fontSize: '16px' } },
+            `${exam.name} — with love ♥`),
+          p({ style: { color: 'rgba(253,234,224,.5)', marginBottom: '18px', fontSize: '11px' } },
+            `via ${prov.name} · ${getCurrentModel()}`),
+          div({ class: 'pb-bg', style: { height: '7px', marginBottom: '18px', background: 'rgba(253,234,224,.25)' } },
+            div({ style: { height: '100%', borderRadius: '99px', background: '#FDEAE0', width: pct + '%', transition: 'width .3s' } })
+          )
+        ),
+    ...exam.sections.map((s, i) => {
+      const st = loadStatus[i] || 'pending';
+      return div({ class: 'load-section' },
+        span({ style: { fontSize: '18px', color: iColor[st], animation: st === 'loading' ? 'spin .8s linear infinite' : '', display: 'inline-block', width: '24px', textAlign: 'center', fontWeight: 700 } }, icons[st]),
+        div({ style: { flex: 1 } },
+          div({ style: { fontWeight: 700, fontSize: '14px', color: '#5D2E2A' } }, s.name),
+          div({ style: { color: '#A07070', fontSize: '12px', marginTop: '1px' } }, s.count + ' questions')
+        ),
+        span({ style: { fontSize: '12px', fontWeight: 600, color: st === 'done' ? '#059669' : st === 'error' ? '#DC2626' : st === 'loading' ? '#C84B43' : '#B89090' } },
+          st === 'loading' ? '✨ Generating…' : st === 'done' ? '💖 Ready' : st === 'error' ? '💔 Failed' : 'Queued')
+      );
+    }),
+    loadError && div({ style: { marginTop: '14px', padding: '12px 16px', background: 'rgba(200,60,50,.18)', border: '1px solid rgba(200,60,50,.35)', borderRadius: '10px', fontSize: '13px', color: '#FDEAE0', fontWeight: 600 } },
+      '💔 ' + loadError + ' — refresh to retry.'
     )
   );
+
+  screen.appendChild(box);
+  return screen;
 }
 
 function renderTest() {
