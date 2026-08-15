@@ -142,7 +142,7 @@ const PROVIDERS = {
         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      if (!res.ok) { const e = await res.json().catch(() => ({})); handleAPIError(res, e); }
       const data = await res.json();
       return data.content.map(b => b.text || '').join('');
     }
@@ -159,7 +159,7 @@ const PROVIDERS = {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      if (!res.ok) { const e = await res.json().catch(() => ({})); handleAPIError(res, e); }
       const data = await res.json();
       return data.choices[0].message.content;
     }
@@ -176,7 +176,7 @@ const PROVIDERS = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8000 } })
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      if (!res.ok) { const e = await res.json().catch(() => ({})); handleAPIError(res, e); }
       const data = await res.json();
       if (!data.candidates?.[0]) throw new Error('No response from Gemini');
       return data.candidates[0].content.parts.map(p => p.text || '').join('');
@@ -194,7 +194,7 @@ const PROVIDERS = {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      if (!res.ok) { const e = await res.json().catch(() => ({})); handleAPIError(res, e); }
       const data = await res.json();
       return data.choices[0].message.content;
     }
@@ -211,7 +211,7 @@ const PROVIDERS = {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      if (!res.ok) { const e = await res.json().catch(() => ({})); handleAPIError(res, e); }
       const data = await res.json();
       return data.choices[0].message.content;
     }
@@ -220,6 +220,17 @@ const PROVIDERS = {
 
 const LETTERS = ['A','B','C','D'];
 const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+// Parses 429 retry-after from error message and throws with retryAfter property
+function handleAPIError(res, errData) {
+  const msg = errData.error?.message || `API ${res.status}`;
+  const err = new Error(msg);
+  if (res.status === 429) {
+    const m = msg.match(/try again in ([\d.]+)s/i) || msg.match(/after ([\d.]+) second/i);
+    err.retryAfter = m ? parseFloat(m[1]) : 60;
+  }
+  throw err;
+}
 
 // ═══════════════════════════════════════
 // QUESTION GENERATION
@@ -312,6 +323,8 @@ let state = {
   // loading
   loadStatus: [],
   loadError: null,
+  loadRetryIn: 0,
+  loadRetryMsg: null,
 };
 let timerInterval = null;
 
@@ -635,15 +648,37 @@ function startLoading(key) {
       const s = exam.sections[i];
       state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'loading' : v);
       render();
-      try {
-        const qs = await generateSection(exam.name, s.id, s.count);
-        allQs.push(qs);
-        state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'done' : v);
-        render();
-      } catch (e) {
-        state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'error' : v);
-        state.loadError = `${s.name}: ${e.message}`;
-        render(); return;
+      const MAX_RETRIES = 4;
+      let attempt = 0;
+      let succeeded = false;
+      while (attempt <= MAX_RETRIES) {
+        try {
+          const qs = await generateSection(exam.name, s.id, s.count);
+          allQs.push(qs);
+          state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'done' : v);
+          state.loadRetryIn = 0; state.loadRetryMsg = null;
+          render();
+          succeeded = true;
+          break;
+        } catch (e) {
+          if (e.retryAfter != null && attempt < MAX_RETRIES) {
+            attempt++;
+            const waitSec = Math.ceil(e.retryAfter) + 3;
+            for (let t = waitSec; t > 0; t--) {
+              state.loadRetryIn = t;
+              state.loadRetryMsg = `Rate limited — retrying in ${t}s (attempt ${attempt}/${MAX_RETRIES})`;
+              render();
+              await new Promise(r => setTimeout(r, 1000));
+            }
+            state.loadRetryIn = 0; state.loadRetryMsg = null;
+            state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'loading' : v);
+            render();
+          } else {
+            state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'error' : v);
+            state.loadError = `${s.name}: ${e.message}`;
+            render(); return;
+          }
+        }
       }
     }
     // Init test state
@@ -660,7 +695,7 @@ function startLoading(key) {
 }
 
 function renderLoading() {
-  const { examKey, loadStatus, loadError } = state;
+  const { examKey, loadStatus, loadError, loadRetryIn, loadRetryMsg } = state;
   const exam = EXAMS[examKey];
   const prov = PROVIDERS[CURRENT_PROVIDER];
   const doneN = loadStatus.filter(s => s === 'done').length;
@@ -669,13 +704,25 @@ function renderLoading() {
   const iconColors = { pending: '#9CA3AF', loading: '#93C5FD', done: '#34D399', error: '#F87171' };
   return div({ class: 'load-screen' },
     div({ class: 'load-box' },
-      div({ class: 'load-icon' }, '🤖'),
-      el('h2', { style: { fontSize: '22px', fontWeight: 700, marginBottom: '6px' } }, 'Generating questions'),
-      p({ style: { opacity: .6, marginBottom: '4px', fontSize: '13px' } }, `Crafting fresh questions for ${exam.name}…`),
-      p({ style: { opacity: .4, marginBottom: '20px', fontSize: '11px' } }, `via ${prov.name} · ${getCurrentModel()}`),
-      div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
-        div({ class: 'pb-fill', style: { width: pct + '%', background: '#F59E0B' } })
+      div({ class: 'load-icon' }, loadRetryIn > 0 ? '⏳' : '🤖'),
+      el('h2', { style: { fontSize: '22px', fontWeight: 700, marginBottom: '6px' } },
+        loadRetryIn > 0 ? 'Rate limit — waiting…' : 'Generating questions'
       ),
+      loadRetryIn > 0
+        ? div(null,
+            p({ style: { opacity: .8, marginBottom: '8px', fontSize: '13px', color: '#FCD34D' } }, loadRetryMsg),
+            div({ style: { fontSize: '42px', fontWeight: 800, marginBottom: '16px', color: '#F59E0B', fontFamily: 'monospace' } }, loadRetryIn + 's'),
+            div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
+              div({ class: 'pb-fill', style: { width: '100%', background: '#F59E0B', animation: 'pulse 1s infinite' } })
+            )
+          )
+        : div(null,
+            p({ style: { opacity: .6, marginBottom: '4px', fontSize: '13px' } }, `Crafting fresh questions for ${exam.name}…`),
+            p({ style: { opacity: .4, marginBottom: '20px', fontSize: '11px' } }, `via ${prov.name} · ${getCurrentModel()}`),
+            div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
+              div({ class: 'pb-fill', style: { width: pct + '%', background: '#F59E0B' } })
+            )
+          ),
       exam.sections.map((s, i) => {
         const st = loadStatus[i] || 'pending';
         return div({ class: 'load-section' },
