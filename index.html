@@ -365,14 +365,30 @@ Return ONLY valid JSON array, no markdown:
 [{"q":"full question with all clues","opts":["A) ...","B) ...","C) ...","D) ..."],"ans":"C","exp":"explanation","topic":"Seating"}]`
 };
 
-// Escapes bare control characters inside JSON string values (e.g. raw \n the model emits)
-function fixControlChars(str) {
+// Comprehensive JSON sanitizer for LLM output — handles three common malformations:
+//  1. Bare control characters in strings (raw \n \t etc.)
+//  2. Unescaped double-quotes inside string values  e.g. "What is "ROI"?"
+//  3. (caller strips trailing commas before passing)
+// Uses lookahead on every " to decide: closing quote vs inner unescaped quote.
+function sanitizeJSON(str) {
   let out = '', inStr = false, esc = false;
   for (let i = 0; i < str.length; i++) {
     const ch = str[i], code = str.charCodeAt(i);
-    if (esc)          { out += ch; esc = false; continue; }
-    if (ch === '\\' && inStr) { out += ch; esc = true; continue; }
-    if (ch === '"')   { inStr = !inStr; out += ch; continue; }
+    if (esc)                  { out += ch; esc = false; continue; }
+    if (ch === '\\' && inStr) { out += ch; esc = true;  continue; }
+    if (ch === '"') {
+      if (!inStr) { inStr = true; out += ch; continue; }
+      // Inside a string — look ahead past whitespace for valid JSON continuation
+      let j = i + 1;
+      while (j < str.length && ' \t\n\r'.includes(str[j])) j++;
+      const nxt = str[j];
+      if (nxt === ',' || nxt === ':' || nxt === '}' || nxt === ']' || j >= str.length) {
+        inStr = false; out += ch;   // legitimate closing quote
+      } else {
+        out += '\\"';               // inner unescaped quote — escape it
+      }
+      continue;
+    }
     if (inStr && code < 0x20) {
       if      (code === 0x09) out += '\\t';
       else if (code === 0x0A) out += '\\n';
@@ -387,21 +403,21 @@ function fixControlChars(str) {
 
 function parseQuestions(raw) {
   const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  // Attempt 1: direct parse
+  // 1: direct parse
   try { const a = JSON.parse(clean); if (Array.isArray(a)) return a; } catch {}
-  // Extract the JSON array from surrounding text
+  // Extract JSON array block from surrounding text
   const m = clean.match(/\[[\s\S]*\]/);
   if (!m) throw new Error('No JSON array in response');
   const jsonStr = m[0];
-  // Attempt 2: parse extracted block
+  // 2: parse extracted block as-is
   try { const a = JSON.parse(jsonStr); if (Array.isArray(a)) return a; } catch {}
-  // Attempt 3: strip trailing commas (e.g. {...}, ] or {...}, })
+  // 3: strip trailing commas before ] or }
   const noTrail = jsonStr.replace(/,\s*([\]}])/g, '$1');
   try { const a = JSON.parse(noTrail); if (Array.isArray(a)) return a; } catch {}
-  // Attempt 4: fix bare control characters
-  try { const a = JSON.parse(fixControlChars(jsonStr)); if (Array.isArray(a)) return a; } catch {}
-  // Attempt 5: both fixes combined
-  const a = JSON.parse(fixControlChars(noTrail));
+  // 4: full sanitize (control chars + unescaped quotes)
+  try { const a = JSON.parse(sanitizeJSON(jsonStr)); if (Array.isArray(a)) return a; } catch {}
+  // 5: trailing comma strip + full sanitize
+  const a = JSON.parse(sanitizeJSON(noTrail));
   if (!Array.isArray(a)) throw new Error('Response is not a JSON array');
   return a;
 }
