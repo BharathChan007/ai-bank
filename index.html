@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BankMock — AI Mock Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;color:#111827;min-height:100vh}
@@ -88,6 +90,112 @@ button{cursor:pointer;font-family:inherit}
 
 /* ── Select ── */
 select{padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;background:#fff;color:#111827;width:100%}
+
+/* ═══════════════════════════════════════
+   LOVE / LOGIN THEME  (matching sample)
+═══════════════════════════════════════ */
+@keyframes floatHeart{
+  0%  {transform:translateY(0) rotate(-5deg);opacity:.85}
+  80% {opacity:.3}
+  100%{transform:translateY(-110vh) rotate(15deg);opacity:0}
+}
+@keyframes heartbeat{
+  0%,100%{transform:scale(1)}
+  15%    {transform:scale(1.4)}
+  30%    {transform:scale(1.05)}
+  45%    {transform:scale(1.22)}
+  60%    {transform:scale(1)}
+}
+@keyframes loginSlide{
+  from{transform:translateY(44px);opacity:0}
+  to  {transform:translateY(0);opacity:1}
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%,60%{transform:translateX(-9px)}
+  40%,80%{transform:translateX(9px)}
+}
+@keyframes dashedMove{to{stroke-dashoffset:-40}}
+
+/* Background — warm coral/salmon like the sample */
+.love-bg{
+  min-height:100vh;
+  background:#C87872;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  font-family:'Nunito',sans-serif;
+}
+/* Login card — warm cream like the sample's inner white area */
+.love-card{
+  background:#FDEAE0;
+  border-radius:28px;
+  padding:38px 34px 42px;
+  width:min(93vw,420px);
+  text-align:center;
+  box-shadow:0 24px 64px rgba(100,30,25,.3);
+  animation:loginSlide .55s cubic-bezier(.22,1,.36,1);
+  position:relative;z-index:10;
+}
+.love-card.shake{animation:shake .4s ease}
+/* Typography matching sample fonts */
+.love-title{
+  font-family:'Pacifico',cursive;
+  font-size:26px;color:#C84B43;
+  margin:10px 0 5px;line-height:1.3;
+}
+.love-subtitle{
+  font-family:'Dancing Script',cursive;
+  font-size:19px;color:#7B5EA7;
+  margin-bottom:26px;
+}
+/* Inputs — cream-style matching sample palette */
+.love-input{
+  width:100%;display:block;
+  background:rgba(200,120,114,.1);
+  border:2px solid rgba(200,120,114,.4);
+  border-radius:50px;
+  padding:12px 22px;
+  font-size:14px;font-weight:600;
+  color:#5D2E2A;
+  font-family:'Nunito',sans-serif;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  margin-bottom:14px;
+  box-sizing:border-box;
+}
+.love-input::placeholder{color:rgba(160,80,76,.45);font-weight:400}
+.love-input:focus{
+  border-color:#C84B43;
+  box-shadow:0 0 0 3px rgba(200,75,67,.18);
+}
+/* Button — coral gradient matching sample accent color */
+.love-btn{
+  width:100%;
+  background:linear-gradient(135deg,#E07B6A,#C84B43);
+  color:#fff;border:none;border-radius:50px;
+  padding:14px;font-size:16px;font-weight:800;
+  font-family:'Nunito',sans-serif;
+  cursor:pointer;letter-spacing:.5px;
+  box-shadow:0 8px 22px rgba(200,75,67,.38);
+  transition:transform .12s,filter .12s;
+  margin-top:4px;
+}
+.love-btn:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.08)}
+.love-btn:active{transform:scale(.97)}
+/* Error */
+.love-err{
+  display:none;font-family:'Nunito',sans-serif;font-weight:700;
+  color:#9B3028;font-size:13px;
+  margin-bottom:12px;padding:9px 16px;border-radius:12px;
+  background:rgba(200,100,90,.18);border:1px solid rgba(200,100,90,.35);
+}
+/* Floating heart particles */
+.hprt{position:absolute;pointer-events:none;animation:floatHeart linear infinite;line-height:1;z-index:2}
+/* Dashed heart outline decoration */
+.dashed-heart{position:absolute;pointer-events:none;z-index:1}
+/* Logout button override */
+.btn-logout{background:none;border:1px solid #D1D5DB;border-radius:8px;padding:5px 10px;font-size:12px;color:#374151;cursor:pointer;font-family:inherit}
+.btn-logout:hover{background:#FEE2E2;border-color:#FCA5A5;color:#DC2626}
 </style>
 </head>
 <body>
@@ -218,6 +326,10 @@ const PROVIDERS = {
   }
 };
 
+// ── Login credentials ──
+const VALID_USER = 'kavyasree0209';
+const VALID_PASS = 'bujjibaby';
+
 const LETTERS = ['A','B','C','D'];
 const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
@@ -344,7 +456,7 @@ function setCurrentProvider(provKey) {
 // STATE
 // ═══════════════════════════════════════
 let state = {
-  screen: 'home',  // home | apikey | loading | test | analysis | history
+  screen: localStorage.getItem('bankmock-loggedin') ? 'home' : 'login',
   examKey: null,
   questions: null,
   answers: null,
@@ -468,6 +580,180 @@ function submitTest() {
 // SCREENS
 // ═══════════════════════════════════════
 
+function renderLogin() {
+  const wrap = div({ class: 'love-bg' });
+
+  // ── Floating heart particles ──
+  const hch = ['💕','💖','💗','💓','💝','❤️'];
+  for (let i = 0; i < 20; i++) {
+    const h = document.createElement('span');
+    h.className = 'hprt';
+    h.textContent = hch[i % hch.length];
+    h.style.cssText = `left:${Math.random()*100}vw;bottom:-60px;font-size:${10+Math.random()*16}px;animation-duration:${5+Math.random()*9}s;animation-delay:${Math.random()*9}s;`;
+    wrap.appendChild(h);
+  }
+
+  // ── Clouds (muted dusty rose, like the sample) ──
+  function makeCloud(x, y, w, flip, opacity) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:absolute;top:${y}px;${flip?'right':'left'}:${x}px;width:${w}px;z-index:1;pointer-events:none;transform:${flip?'scaleX(-1)':'none'}`;
+    d.innerHTML = `<svg viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="90" cy="58" rx="82" ry="26" fill="#D4958A" opacity="${opacity}"/><ellipse cx="60" cy="46" rx="44" ry="24" fill="#D4958A" opacity="${opacity}"/><ellipse cx="125" cy="44" rx="42" ry="22" fill="#D4958A" opacity="${opacity}"/></svg>`;
+    return d;
+  }
+  wrap.appendChild(makeCloud(-20, 30, 170, false, .6));
+  wrap.appendChild(makeCloud(-15, 80, 120, true, .45));
+  wrap.appendChild(makeCloud(-25, -10, 150, true, .5));   // bottom-right
+  wrap.appendChild(makeCloud(-10, 20, 110, false, .4));   // bottom-left mirrored
+
+  // ── Dashed heart outlines (decorative, top-left & bottom-right) ──
+  const dhWrap = document.createElement('div');
+  dhWrap.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:1;';
+  dhWrap.innerHTML = `
+    <svg style="position:absolute;top:18px;left:16px;width:88px;opacity:.55" viewBox="0 0 100 88">
+      <path d="M50 76 C50 76 8 50 8 24 C8 10 22 4 33 10 C41 14 50 24 50 24 C50 24 59 14 67 10 C78 4 92 10 92 24 C92 50 50 76 50 76Z" fill="none" stroke="#FDEAE0" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>
+    <svg style="position:absolute;bottom:28px;right:24px;width:64px;opacity:.4" viewBox="0 0 100 88">
+      <path d="M50 76 C50 76 8 50 8 24 C8 10 22 4 33 10 C41 14 50 24 50 24 C50 24 59 14 67 10 C78 4 92 10 92 24 C92 50 50 76 50 76Z" fill="none" stroke="#FDEAE0" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>
+    <svg style="position:absolute;top:50%;right:30px;width:44px;opacity:.3" viewBox="0 0 100 88">
+      <path d="M50 76 C50 76 8 50 8 24 C8 10 22 4 33 10 C41 14 50 24 50 24 C50 24 59 14 67 10 C78 4 92 10 92 24 C92 50 50 76 50 76Z" fill="none" stroke="#FDEAE0" stroke-width="2.5" stroke-dasharray="6 4"/>
+    </svg>`;
+  wrap.appendChild(dhWrap);
+
+  // ── Illustrated couple SVG (flat-design, matching sample style) ──
+  const coupleSVG = document.createElement('div');
+  coupleSVG.innerHTML = `
+  <svg viewBox="0 0 230 175" xmlns="http://www.w3.org/2000/svg" style="width:210px;display:block;margin:0 auto 6px">
+    <!-- === BOY (right) === -->
+    <!-- Head -->
+    <circle cx="148" cy="54" r="24" fill="#FFCC9A"/>
+    <!-- Hair -->
+    <path d="M126 46 Q148 26 170 46 Q164 30 148 27 Q132 30 126 46Z" fill="#5D4037"/>
+    <!-- Ear -->
+    <ellipse cx="124" cy="54" rx="5" ry="7" fill="#FFCC9A"/>
+    <!-- Face details -->
+    <circle cx="141" cy="56" r="2" fill="#5D4037"/>
+    <circle cx="155" cy="56" r="2" fill="#5D4037"/>
+    <path d="M141 64 Q148 69 155 64" stroke="#C87070" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Blush -->
+    <ellipse cx="137" cy="62" rx="5" ry="3" fill="#E8A090" opacity=".5"/>
+    <ellipse cx="159" cy="62" rx="5" ry="3" fill="#E8A090" opacity=".5"/>
+    <!-- Body striped shirt (coral-orange like sample) -->
+    <rect x="122" y="76" width="53" height="56" rx="12" fill="#E07B6A"/>
+    <rect x="122" y="85" width="53" height="5" fill="#C05A4A" opacity=".45"/>
+    <rect x="122" y="96" width="53" height="5" fill="#C05A4A" opacity=".45"/>
+    <rect x="122" y="107" width="53" height="5" fill="#C05A4A" opacity=".45"/>
+    <!-- Arm hugging girl (extended left) -->
+    <rect x="90" y="78" width="35" height="13" rx="6" fill="#FFCC9A" transform="rotate(-8 107 84)"/>
+    <!-- Right arm -->
+    <rect x="173" y="80" width="18" height="12" rx="6" fill="#FFCC9A"/>
+    <!-- Legs -->
+    <rect x="126" y="128" width="18" height="36" rx="7" fill="#37474F"/>
+    <rect x="150" y="128" width="18" height="36" rx="7" fill="#37474F"/>
+    <!-- Shoes -->
+    <ellipse cx="135" cy="165" rx="13" ry="6" fill="#263238"/>
+    <ellipse cx="159" cy="165" rx="13" ry="6" fill="#1565C0"/>
+
+    <!-- === GIRL (left, leaning on boy) === -->
+    <!-- Body/skirt first (behind legs) -->
+    <rect x="68" y="80" width="46" height="52" rx="12" fill="#5C6BC0"/>
+    <!-- Purple skirt -->
+    <rect x="62" y="124" width="58" height="18" rx="9" fill="#7B1FA2"/>
+    <!-- Head -->
+    <circle cx="91" cy="60" r="22" fill="#FFCC9A"/>
+    <!-- Hair - long black (like sample girl) -->
+    <path d="M71 52 Q91 34 111 52 Q107 36 91 32 Q75 36 71 52Z" fill="#1A1A1A"/>
+    <rect x="70" y="56" width="9" height="56" rx="4" fill="#1A1A1A"/>
+    <rect x="113" y="56" width="9" height="56" rx="4" fill="#1A1A1A"/>
+    <!-- Ear -->
+    <ellipse cx="113" cy="60" rx="5" ry="7" fill="#FFCC9A"/>
+    <!-- Face -->
+    <circle cx="85" cy="62" r="2" fill="#5D4037"/>
+    <circle cx="97" cy="62" r="2" fill="#5D4037"/>
+    <path d="M85 70 Q91 76 97 70" stroke="#C87070" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- Blush -->
+    <ellipse cx="81" cy="68" rx="5" ry="3" fill="#E8A090" opacity=".5"/>
+    <ellipse cx="101" cy="68" rx="5" ry="3" fill="#E8A090" opacity=".5"/>
+    <!-- Legs -->
+    <rect x="74" y="138" width="16" height="26" rx="7" fill="#FFCC9A"/>
+    <rect x="99" y="138" width="16" height="26" rx="7" fill="#FFCC9A"/>
+    <!-- Raised foot (like sample!) -->
+    <ellipse cx="106" cy="152" rx="9" ry="14" fill="#FFCC9A" transform="rotate(-40 106 152)"/>
+    <!-- Shoes -->
+    <ellipse cx="82" cy="165" rx="12" ry="5" fill="#1A1A1A"/>
+    <ellipse cx="107" cy="163" rx="12" ry="5" fill="#1A1A1A"/>
+
+    <!-- === HEARTS floating above (like sample) === -->
+    <text x="118" y="28" font-size="18" fill="#E05C5C">♥</text>
+    <text x="136" y="17" font-size="13" fill="#E05C5C" opacity=".75">♥</text>
+    <text x="103" y="20" font-size="10" fill="#E05C5C" opacity=".55">♥</text>
+
+    <!-- === FLOWERS (bottom) === -->
+    <!-- Left flower -->
+    <rect x="34" y="155" width="5" height="16" rx="2" fill="#81C784"/>
+    <circle cx="36" cy="153" r="8" fill="#EF9A9A"/>
+    <circle cx="28" cy="148" r="5" fill="#F48FB1"/>
+    <circle cx="44" cy="148" r="5" fill="#F48FB1"/>
+    <!-- Right flower -->
+    <rect x="192" y="150" width="5" height="18" rx="2" fill="#81C784"/>
+    <circle cx="194" cy="148" r="9" fill="#FF8A65"/>
+    <circle cx="185" cy="142" r="6" fill="#FFCC80"/>
+    <!-- Far right flower -->
+    <rect x="213" y="156" width="4" height="14" rx="2" fill="#81C784"/>
+    <circle cx="215" cy="154" r="7" fill="#F48FB1"/>
+    <!-- Small scatter hearts on ground -->
+    <text x="22" y="168" font-size="9" fill="#E05C5C" opacity=".55">♥</text>
+    <text x="50" y="172" font-size="7" fill="#E05C5C" opacity=".4">♥</text>
+    <text x="200" y="145" font-size="8" fill="#E05C5C" opacity=".5">♥</text>
+
+    <!-- === BUTTERFLY (top-right, like sample) === -->
+    <g transform="translate(204,40) rotate(-25)">
+      <ellipse cx="-6" cy="-8" rx="11" ry="7" fill="#D4958A" opacity=".75"/>
+      <ellipse cx="-6" cy="7" rx="9" ry="6" fill="#C47878" opacity=".6"/>
+      <line x1="-6" y1="-15" x2="-6" y2="13" stroke="#8B6060" stroke-width="1.2"/>
+      <path d="M-6 -15 Q-3 -19 -6 -15" stroke="#8B6060" stroke-width="1" fill="none"/>
+    </g>
+    <!-- Butterfly trail dashes -->
+    <path d="M190 35 Q180 28 170 32 Q160 36 155 30" stroke="#FDEAE0" stroke-width="1.2" fill="none" stroke-dasharray="4 3" opacity=".5"/>
+  </svg>`;
+
+  const errDiv = el('div', { class: 'love-err' });
+  const uInp = el('input', { class: 'love-input', type: 'text', placeholder: '🌸  Username', autocomplete: 'off' });
+  const pInp = el('input', { class: 'love-input', type: 'password', placeholder: '💝  Password' });
+  const loginBtn = el('button', { class: 'love-btn' }, '♥  Login with Love');
+
+  const card = el('div', { class: 'love-card' },
+    coupleSVG,
+    el('div', { class: 'love-title' }, 'Welcome Back! 💕'),
+    el('div', { class: 'love-subtitle' }, 'Sign in to your portal'),
+    uInp, pInp, errDiv, loginBtn,
+    el('div', { style: { marginTop: '16px', color: 'rgba(140,60,55,.45)', fontSize: '11px', fontFamily: "'Dancing Script', cursive", fontSize: '14px' } }, 'Love is in the air ♥')
+  );
+
+  function doLogin() {
+    if (uInp.value.trim() === VALID_USER && pInp.value === VALID_PASS) {
+      localStorage.setItem('bankmock-loggedin', '1');
+      setState({ screen: 'home' });
+    } else {
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      errDiv.style.display = 'block';
+      errDiv.textContent = uInp.value.trim() !== VALID_USER
+        ? '💔 Username not found'
+        : '💔 Wrong password, my love~';
+    }
+  }
+
+  loginBtn.addEventListener('click', doLogin);
+  pInp.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  uInp.addEventListener('keydown', e => { if (e.key === 'Enter') pInp.focus(); });
+  [uInp, pInp].forEach(i => i.addEventListener('input', () => { errDiv.style.display = 'none'; }));
+
+  wrap.appendChild(el('div', { style: { position: 'relative', zIndex: 10 } }, card));
+  return wrap;
+}
+
 function renderHome() {
   const { history } = state;
   const selKey = state.examKey || 'sbi';
@@ -487,7 +773,8 @@ function renderHome() {
               btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'apikey' }) }, '⚙ Provider')
             )
           : btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'apikey' }) }, '🔑 Set API Key'),
-        btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'history' }) }, `📊 History (${history.length})`)
+        btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'history' }) }, `📊 History (${history.length})`),
+        btn({ class: 'btn-logout', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => { localStorage.removeItem('bankmock-loggedin'); setState({ screen: 'login' }); } }, '🚪 Logout')
       )
     ),
     div({ style: { maxWidth: '560px', margin: '0 auto', padding: '24px 16px' } },
@@ -1093,7 +1380,7 @@ function renderHistory() {
 // ═══════════════════════════════════════
 function render() {
   const root = document.getElementById('root');
-  const screens = { home: renderHome, apikey: renderApiKey, loading: renderLoading, test: renderTest, analysis: renderAnalysis, history: renderHistory };
+  const screens = { login: renderLogin, home: renderHome, apikey: renderApiKey, loading: renderLoading, test: renderTest, analysis: renderAnalysis, history: renderHistory };
   const fn = screens[state.screen];
   if (!fn) return;
   root.innerHTML = '';
