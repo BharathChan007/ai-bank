@@ -401,25 +401,56 @@ function sanitizeJSON(str) {
   return out;
 }
 
+// Converts single-quoted or bare (unquoted) property names → double-quoted
+// e.g.  {'q': "..."} or  {q: "..."}  →  {"q": "..."}
+function fixPropertyNames(str) {
+  return str
+    .replace(/([{,]\s*)'([^'\n]{1,80})'\s*:/g, (_, pre, k) => `${pre}"${k}":`)
+    .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]{0,40})\s*:/g, (_, pre, k) => `${pre}"${k}":`);
+}
+
+// Last-resort: extract however many complete question objects parsed before the truncation
+function recoverPartial(jsonStr) {
+  let depth = 0, lastEnd = -1, inStr = false, esc = false;
+  for (let i = 0; i < jsonStr.length; i++) {
+    const ch = jsonStr[i];
+    if (esc) { esc = false; continue; }
+    if (ch === '\\' && inStr) { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (!inStr) {
+      if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) lastEnd = i; }
+    }
+  }
+  if (lastEnd < 0) return null;
+  try {
+    const a = JSON.parse(jsonStr.slice(0, lastEnd + 1) + ']');
+    return Array.isArray(a) && a.length ? a : null;
+  } catch { return null; }
+}
+
 function parseQuestions(raw) {
   const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-  // 1: direct parse
+  // 1: direct
   try { const a = JSON.parse(clean); if (Array.isArray(a)) return a; } catch {}
-  // Extract JSON array block from surrounding text
   const m = clean.match(/\[[\s\S]*\]/);
   if (!m) throw new Error('No JSON array in response');
   const jsonStr = m[0];
-  // 2: parse extracted block as-is
+  // 2: extracted block as-is
   try { const a = JSON.parse(jsonStr); if (Array.isArray(a)) return a; } catch {}
-  // 3: strip trailing commas before ] or }
+  // 3: strip trailing commas
   const noTrail = jsonStr.replace(/,\s*([\]}])/g, '$1');
   try { const a = JSON.parse(noTrail); if (Array.isArray(a)) return a; } catch {}
-  // 4: full sanitize (control chars + unescaped quotes)
+  // 4: sanitize (control chars + unescaped inner quotes)
   try { const a = JSON.parse(sanitizeJSON(jsonStr)); if (Array.isArray(a)) return a; } catch {}
-  // 5: trailing comma strip + full sanitize
-  const a = JSON.parse(sanitizeJSON(noTrail));
-  if (!Array.isArray(a)) throw new Error('Response is not a JSON array');
-  return a;
+  // 5: trailing commas + sanitize
+  try { const a = JSON.parse(sanitizeJSON(noTrail)); if (Array.isArray(a)) return a; } catch {}
+  // 6: fix single-quoted / bare property names, then sanitize + strip trailing commas
+  try { const a = JSON.parse(fixPropertyNames(sanitizeJSON(noTrail))); if (Array.isArray(a)) return a; } catch {}
+  // 7: partial recovery — return whatever complete objects parsed before truncation
+  const partial = recoverPartial(fixPropertyNames(sanitizeJSON(noTrail)));
+  if (partial) return partial;
+  throw new Error('Could not parse JSON response after all repair attempts');
 }
 
 async function generateSection(examName, sectionId, count) {
