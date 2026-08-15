@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BankMock — AI Mock Tests</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;color:#111827;min-height:100vh}
+button{cursor:pointer;font-family:inherit}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ── Layout ── */
+.topbar{background:#fff;border-bottom:1px solid #E5E7EB;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;padding:16px 18px}
+
+/* ── Buttons ── */
+.btn-primary{background:#1B4F8A;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600}
+.btn-primary:hover{background:#163f70}
+.btn-ghost{background:transparent;border:1px solid #D1D5DB;border-radius:8px;padding:9px 16px;font-size:14px;color:#374151}
+.btn-ghost:hover{background:#F9FAFB}
+.btn-danger{background:#DC2626;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600}
+.btn-danger:hover{background:#b91c1c}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;letter-spacing:.3px}
+.badge-blue{background:#EFF6FF;color:#1D4ED8}
+.badge-green{background:#D1FAE5;color:#059669}
+.badge-red{background:#FEE2E2;color:#DC2626}
+.badge-amber{background:#FEF3C7;color:#D97706}
+.badge-gray{background:#F3F4F6;color:#6B7280}
+.badge-purple{background:#F3E8FF;color:#7C3AED}
+
+/* ── Section tabs ── */
+.sec-tab{background:transparent;border:none;padding:6px 10px;border-radius:8px;font-size:13px;color:#6B7280}
+.sec-tab.active{background:#EFF6FF;color:#1B4F8A;font-weight:600}
+
+/* ── Provider tabs ── */
+.prov-tab{background:transparent;border:1px solid #E5E7EB;padding:7px 12px;border-radius:8px;font-size:12px;color:#6B7280;transition:all .12s}
+.prov-tab.active{background:#1B4F8A;color:#fff;border-color:transparent;font-weight:600}
+.prov-tab:hover:not(.active){background:#F3F4F6}
+
+/* ── Timer ── */
+.timer{font-family:monospace;font-size:15px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid #E5E7EB;background:#F9FAFB;color:#111827}
+.timer.warn{border-color:#F59E0B;color:#D97706;background:#FFFBEB}
+.timer.danger{border-color:#EF4444;color:#DC2626;background:#FEF2F2;animation:pulse 1s infinite}
+
+/* ── Options ── */
+.opt-btn{width:100%;background:#fff;border:1.5px solid #E5E7EB;border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;text-align:left;transition:border-color .12s,background .12s;font-size:14px;color:#111827;margin-bottom:8px}
+.opt-btn:hover{border-color:#93C5FD;background:#F0F9FF}
+.opt-btn.selected{border-color:#1B4F8A;background:#EFF6FF}
+.opt-btn.correct-ans{border-color:#10B981;background:#D1FAE5;cursor:default}
+.opt-btn.wrong-ans{border-color:#EF4444;background:#FEE2E2;cursor:default}
+.letter-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;background:#F3F4F6;color:#374151;border:1px solid #E5E7EB}
+.opt-btn.selected .letter-badge{background:#1B4F8A;color:#fff;border-color:transparent}
+.opt-btn.correct-ans .letter-badge{background:#10B981;color:#fff;border-color:transparent}
+.opt-btn.wrong-ans .letter-badge{background:#EF4444;color:#fff;border-color:transparent}
+
+/* ── Palette buttons ── */
+.qp-btn{width:30px;height:30px;border-radius:6px;border:1px solid #E5E7EB;font-size:11px;font-weight:600;background:#F9FAFB;color:#9CA3AF;cursor:pointer;transition:all .1s}
+.qp-btn.cur{background:#1B4F8A;color:#fff;border-color:transparent}
+.qp-btn.ans{background:#D1FAE5;color:#059669;border-color:#A7F3D0}
+.qp-btn.flagged{background:#FEF3C7;color:#D97706;border-color:#FDE68A}
+.qp-btn.vis{background:#F3F4F6;color:#374151;border-color:#D1D5DB}
+.qp-btn.wrong-rev{background:#FEE2E2;color:#DC2626;border-color:#FECACA}
+
+/* ── Progress bar ── */
+.pb-bg{background:#E5E7EB;border-radius:99px;overflow:hidden}
+.pb-fill{height:100%;border-radius:99px;background:#1B4F8A;transition:width .3s}
+
+/* ── Modal ── */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:100}
+
+/* ── Score ── */
+.score-big{font-size:52px;font-weight:800;line-height:1}
+
+/* ── Animations ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+.pulse-anim{animation:pulse 1.2s infinite}
+
+/* ── Loading screen ── */
+.load-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0F2044;color:#fff}
+.load-box{text-align:center;padding:32px;width:100%;max-width:420px}
+.load-icon{font-size:52px;margin-bottom:12px}
+.load-section{background:rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;text-align:left}
+
+/* ── Select ── */
+select{padding:8px 10px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;background:#fff;color:#111827;width:100%}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ═══════════════════════════════════════
+// EXAM CONFIG
+// ═══════════════════════════════════════
+const EXAMS = {
+  sbi: {
+    name: 'SBI Clerk Prelims', badge: 'SBI',
+    sections: [
+      { id: 'english',   name: 'English Language',  count: 30, time: 1200 },
+      { id: 'quant',     name: 'Numerical Ability',  count: 35, time: 1200 },
+      { id: 'reasoning', name: 'Reasoning Ability',  count: 35, time: 1200 }
+    ],
+    marking: { correct: 1, wrong: -0.25 }
+  },
+  ibps: {
+    name: 'IBPS Clerk Prelims', badge: 'IBPS',
+    sections: [
+      { id: 'english',   name: 'English Language',  count: 30, time: 1200 },
+      { id: 'quant',     name: 'Numerical Ability',  count: 35, time: 1200 },
+      { id: 'reasoning', name: 'Reasoning Ability',  count: 35, time: 1200 }
+    ],
+    marking: { correct: 1, wrong: -0.25 }
+  },
+  rrb: {
+    name: 'RRB Office Asst Prelims', badge: 'RRB',
+    sections: [
+      { id: 'reasoning', name: 'Reasoning',         count: 40, time: 2700 },
+      { id: 'quant',     name: 'Numerical Ability', count: 40, time: 2700 }
+    ],
+    marking: { correct: 1, wrong: -0.25 }
+  }
+};
+
+// ═══════════════════════════════════════
+// PROVIDER CONFIG
+// ═══════════════════════════════════════
+const PROVIDERS = {
+  anthropic: {
+    name: 'Anthropic Claude', short: 'Anthropic',
+    models: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-5', 'claude-sonnet-5'],
+    defaultModel: 'claude-sonnet-4-6',
+    placeholder: 'sk-ant-api03-...',
+    docsUrl: 'https://console.anthropic.com/account/keys',
+    async call(apiKey, model, prompt) {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      const data = await res.json();
+      return data.content.map(b => b.text || '').join('');
+    }
+  },
+  openai: {
+    name: 'OpenAI GPT', short: 'OpenAI',
+    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    defaultModel: 'gpt-4o-mini',
+    placeholder: 'sk-...',
+    docsUrl: 'https://platform.openai.com/api-keys',
+    async call(apiKey, model, prompt) {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+  },
+  gemini: {
+    name: 'Google Gemini', short: 'Gemini',
+    models: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'],
+    defaultModel: 'gemini-2.0-flash',
+    placeholder: 'AIza...',
+    docsUrl: 'https://aistudio.google.com/app/apikey',
+    async call(apiKey, model, prompt) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8000 } })
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      const data = await res.json();
+      if (!data.candidates?.[0]) throw new Error('No response from Gemini');
+      return data.candidates[0].content.parts.map(p => p.text || '').join('');
+    }
+  },
+  groq: {
+    name: 'Groq (Free)', short: 'Groq',
+    models: ['llama-3.3-70b-versatile', 'llama3-8b-8192', 'mixtral-8x7b-32768', 'gemma2-9b-it'],
+    defaultModel: 'llama-3.3-70b-versatile',
+    placeholder: 'gsk_...',
+    docsUrl: 'https://console.groq.com/keys',
+    async call(apiKey, model, prompt) {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+  },
+  mistral: {
+    name: 'Mistral AI', short: 'Mistral',
+    models: ['mistral-large-latest', 'mistral-small-latest', 'open-mixtral-8x7b'],
+    defaultModel: 'mistral-large-latest',
+    placeholder: '...',
+    docsUrl: 'https://console.mistral.ai/api-keys',
+    async call(apiKey, model, prompt) {
+      const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || `API ${res.status}`); }
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+  }
+};
+
+const LETTERS = ['A','B','C','D'];
+const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+// ═══════════════════════════════════════
+// QUESTION GENERATION
+// ═══════════════════════════════════════
+const PROMPTS = {
+  english: (exam, n) => `Generate exactly ${n} MCQ questions for ${exam} English Language section.
+Include: 1 Reading Comprehension passage with 5 questions (include FULL passage in EACH of the 5 question texts), 5 Cloze Test (fill blank in sentence), 5 Error Detection (find grammatical error), 5 Fill in the Blanks, 5 Para Jumbles (rearrange P Q R S), 5 Vocabulary (synonym/antonym/usage).
+Return ONLY valid JSON array, no markdown, no preamble:
+[{"q":"question text","opts":["A) ...","B) ...","C) ...","D) ..."],"ans":"A","exp":"explanation","topic":"RC"}]`,
+
+  quant: (exam, n) => `Generate exactly ${n} MCQ questions for ${exam} Numerical Ability section.
+Include: 5 Number Series (find missing/next), 8 Simplification/Approximation (arithmetic expressions), 5 Quadratic Equations (find roots, compare x and y), 5 Data Interpretation (create ONE data table in text, then 5 questions referencing it), 7 Word Problems (SI, CI, Profit/Loss, Time-Work, Speed-Distance, Percentage, Average — one each), 5 misc.
+Ensure all answers are mathematically correct. Show working in exp field.
+Return ONLY valid JSON array, no markdown:
+[{"q":"full question","opts":["A) ...","B) ...","C) ...","D) ..."],"ans":"B","exp":"step-by-step solution","topic":"DI"}]`,
+
+  reasoning: (exam, n) => `Generate exactly ${n} MCQ questions for ${exam} Reasoning Ability section.
+Include: 1 Linear Seating Arrangement puzzle (6 people, 5 questions — embed FULL clues in EVERY one of the 5 questions), 1 Circular Seating Arrangement (5 people, 5 questions — embed FULL clues in EVERY question), 5 Syllogisms (All/Some/No statements), 5 Coding-Decoding, 5 Inequalities (A>B=C chain type), 5 Blood Relations, 5 Direction-Distance, 5 misc (alphanumeric series, odd one out).
+Return ONLY valid JSON array, no markdown:
+[{"q":"full question with all clues","opts":["A) ...","B) ...","C) ...","D) ..."],"ans":"C","exp":"explanation","topic":"Seating"}]`
+};
+
+async function generateSection(examName, sectionId, count) {
+  const prompt = (PROMPTS[sectionId] || PROMPTS.reasoning)(examName, count);
+  const provider = PROVIDERS[CURRENT_PROVIDER];
+  const text = await provider.call(getCurrentApiKey(), getCurrentModel(), prompt);
+  let arr;
+  try { arr = JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()); }
+  catch { const m = text.match(/\[[\s\S]*\]/); if (!m) throw new Error('No JSON in response'); arr = JSON.parse(m[0]); }
+  if (!Array.isArray(arr) || !arr.length) throw new Error('Empty question array');
+  return arr.slice(0, count).map((q, i) => ({ ...q, id: i, ans: (q.ans || 'A').toUpperCase().charAt(0) }));
+}
+
+// ═══════════════════════════════════════
+// STORAGE (localStorage fallback)
+// ═══════════════════════════════════════
+const Storage = {
+  get(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+};
+
+// ═══════════════════════════════════════
+// MULTI-PROVIDER STATE
+// ═══════════════════════════════════════
+let CURRENT_PROVIDER = localStorage.getItem('bankmock-provider') || 'anthropic';
+let API_KEYS = (() => { try { return JSON.parse(localStorage.getItem('bankmock-apikeys') || '{}'); } catch { return {}; } })();
+let SELECTED_MODELS = (() => { try { return JSON.parse(localStorage.getItem('bankmock-models') || '{}'); } catch { return {}; } })();
+
+// Migrate legacy single API key
+const _legacyKey = localStorage.getItem('bankmock-apikey');
+if (_legacyKey && !API_KEYS.anthropic) {
+  API_KEYS.anthropic = _legacyKey;
+  localStorage.setItem('bankmock-apikeys', JSON.stringify(API_KEYS));
+}
+
+function getCurrentApiKey() { return API_KEYS[CURRENT_PROVIDER] || ''; }
+function getCurrentModel() { return SELECTED_MODELS[CURRENT_PROVIDER] || PROVIDERS[CURRENT_PROVIDER].defaultModel; }
+function saveProviderKey(provKey, apiKey) {
+  API_KEYS[provKey] = apiKey;
+  localStorage.setItem('bankmock-apikeys', JSON.stringify(API_KEYS));
+}
+function saveProviderModel(provKey, model) {
+  SELECTED_MODELS[provKey] = model;
+  localStorage.setItem('bankmock-models', JSON.stringify(SELECTED_MODELS));
+}
+function setCurrentProvider(provKey) {
+  CURRENT_PROVIDER = provKey;
+  localStorage.setItem('bankmock-provider', provKey);
+}
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let state = {
+  screen: 'home',  // home | apikey | loading | test | analysis | history
+  examKey: null,
+  questions: null,
+  answers: null,
+  history: Storage.get('bankmock-history') || [],
+  // test state
+  secIdx: 0, qIdx: 0,
+  answers_live: null,
+  flagged: null,
+  visited: null,
+  timesLeft: null,
+  showPalette: false,
+  confirmSubmit: false,
+  // analysis
+  revSec: null, revQ: 0,
+  // loading
+  loadStatus: [],
+  loadError: null,
+};
+let timerInterval = null;
+
+function setState(patch) { Object.assign(state, patch); render(); }
+
+// ═══════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════
+function secResults(examKey, questions, answers) {
+  const exam = EXAMS[examKey];
+  return exam.sections.map((s, si) => {
+    let c = 0, w = 0, sk = 0;
+    (questions[si] || []).forEach((q, qi) => {
+      const a = (answers[si] || [])[qi];
+      if (a === null || a === undefined) sk++;
+      else if (a === q.ans) c++;
+      else w++;
+    });
+    const score = c * exam.marking.correct + w * exam.marking.wrong;
+    return { correct: c, wrong: w, skipped: sk, score, maxScore: s.count * exam.marking.correct, acc: c / (c + w || 1) };
+  });
+}
+
+function totalResult(examKey, questions, answers) {
+  const sr = secResults(examKey, questions, answers);
+  const tot = { correct: 0, wrong: 0, skipped: 0, score: 0, maxScore: 0 };
+  sr.forEach(r => { tot.correct += r.correct; tot.wrong += r.wrong; tot.skipped += r.skipped; tot.score += r.score; tot.maxScore += r.maxScore; });
+  tot.pct = (tot.score / tot.maxScore) * 100;
+  tot.acc = tot.correct / (tot.correct + tot.wrong || 1);
+  return { sr, tot };
+}
+
+function gradeColor(pct) { return pct >= 70 ? '#059669' : pct >= 50 ? '#D97706' : '#DC2626'; }
+
+// ═══════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════
+function el(tag, attrs, ...children) {
+  const e = document.createElement(tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') e.className = v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+    else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2).toLowerCase(), v);
+    else e.setAttribute(k, v);
+  });
+  children.flat(Infinity).forEach(c => {
+    if (c == null || c === false) return;
+    e.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+const div = (a,...c) => el('div',a,...c);
+const span = (a,...c) => el('span',a,...c);
+const btn = (a,...c) => el('button',a,...c);
+const p = (a,...c) => el('p',a,...c);
+
+// ═══════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const si = state.secIdx;
+    const tl = [...state.timesLeft];
+    if (tl[si] > 0) tl[si]--;
+    if (tl[si] === 0) {
+      const next = si + 1;
+      const exam = EXAMS[state.examKey];
+      if (next < exam.sections.length) {
+        state.secIdx = next; state.qIdx = 0;
+        tl[next] = exam.sections[next].time;
+      } else {
+        clearInterval(timerInterval);
+        submitTest();
+        return;
+      }
+    }
+    state.timesLeft = tl;
+    render();
+  }, 1000);
+}
+
+function submitTest() {
+  clearInterval(timerInterval);
+  const { examKey, questions, answers_live } = state;
+  const exam = EXAMS[examKey];
+  let c = 0, w = 0, sk = 0, sc = 0;
+  exam.sections.forEach((s, si) => {
+    (questions[si] || []).forEach((q, qi) => {
+      const a = (answers_live[si] || [])[qi];
+      if (a == null) sk++; else if (a === q.ans) { c++; sc += exam.marking.correct; } else { w++; sc += exam.marking.wrong; }
+    });
+  });
+  const maxScore = exam.sections.reduce((a, s) => a + s.count, 0) * exam.marking.correct;
+  const rec = { examName: exam.name, badge: exam.badge, date: Date.now(), score: sc, maxScore, correct: c, wrong: w, skipped: sk };
+  const nh = [...state.history, rec].slice(-50);
+  Storage.set('bankmock-history', nh);
+  setState({ screen: 'analysis', answers: answers_live, history: nh, revSec: null, revQ: 0 });
+}
+
+// ═══════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════
+
+function renderHome() {
+  const { history } = state;
+  const selKey = state.examKey || 'sbi';
+  const exam = EXAMS[selKey];
+  const apiKey = getCurrentApiKey();
+  const prov = PROVIDERS[CURRENT_PROVIDER];
+  return div({ style: { minHeight: '100vh', background: '#F0F4F8' } },
+    div({ class: 'topbar', style: { justifyContent: 'space-between' } },
+      div(null,
+        el('div', { style: { fontWeight: 700, fontSize: '17px', color: '#0F2044' } }, '🏦 BankMock'),
+        el('div', { style: { fontSize: '11px', color: '#9CA3AF', marginTop: '2px' } }, 'AI-powered · SBI · IBPS · RRB')
+      ),
+      div({ style: { display: 'flex', gap: '8px', alignItems: 'center' } },
+        apiKey
+          ? div({ style: { display: 'flex', alignItems: 'center', gap: '6px' } },
+              span({ class: 'badge badge-green', style: { fontSize: '10px' } }, '✓ ' + prov.short),
+              btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'apikey' }) }, '⚙ Provider')
+            )
+          : btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'apikey' }) }, '🔑 Set API Key'),
+        btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '5px 10px' }, onClick: () => setState({ screen: 'history' }) }, `📊 History (${history.length})`)
+      )
+    ),
+    div({ style: { maxWidth: '560px', margin: '0 auto', padding: '24px 16px' } },
+      !apiKey && div({ style: { background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px', color: '#92400E' } },
+        '⚠️ Add an API key first to generate questions. ',
+        el('a', { href: '#', style: { color: '#1B4F8A' }, onClick: e => { e.preventDefault(); setState({ screen: 'apikey' }); } }, 'Set up provider →')
+      ),
+      p({ style: { fontSize: '13px', color: '#6B7280', marginBottom: '18px' } }, 'AI generates fresh questions for every test — no repeats.'),
+      Object.entries(EXAMS).map(([key, ex]) =>
+        div({
+          class: 'card',
+          style: { marginBottom: '8px', cursor: 'pointer', border: selKey === key ? '2px solid #1B4F8A' : '1px solid #E5E7EB', transition: 'border-color .15s' },
+          onClick: () => { state.examKey = key; render(); }
+        },
+          div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+            div(null,
+              div({ style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' } },
+                span({ class: 'badge badge-blue' }, ex.badge),
+                span({ style: { fontWeight: 600, fontSize: '14px' } }, ex.name)
+              ),
+              div({ style: { fontSize: '12px', color: '#6B7280' } }, ex.sections.map(s => `${s.name} (${s.count}Q · ${s.time / 60}min)`).join(' | ')),
+              div({ style: { fontSize: '12px', color: '#9CA3AF', marginTop: '2px' } },
+                `Total ${ex.sections.reduce((a, s) => a + s.count, 0)}Q · ${ex.sections.reduce((a, s) => a + s.time, 0) / 60}min · +1 / –0.25`
+              )
+            ),
+            selKey === key ? span({ style: { fontSize: '20px', color: '#1B4F8A' } }, '✓') : null
+          )
+        )
+      ),
+      btn({
+        class: 'btn-primary',
+        style: { width: '100%', padding: '14px', fontSize: '15px', marginTop: '10px', borderRadius: '10px' },
+        onClick: () => {
+          if (!apiKey) { setState({ screen: 'apikey' }); return; }
+          startLoading(state.examKey || 'sbi');
+        }
+      }, 'Start Mock Test →'),
+      history.length > 0 && div({ style: { marginTop: '24px' } },
+        div({ style: { fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '10px' } }, 'Recent tests'),
+        history.slice(-3).reverse().map(h => {
+          const pct = (h.score / h.maxScore) * 100;
+          return div({ class: 'card', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '10px 14px' } },
+            div(null,
+              div({ style: { fontSize: '13px', fontWeight: 600 } }, h.examName),
+              div({ style: { fontSize: '11px', color: '#9CA3AF' } }, new Date(h.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))
+            ),
+            div({ style: { textAlign: 'right' } },
+              div({ style: { fontSize: '18px', fontWeight: 700, color: gradeColor(pct) } }, h.score.toFixed(2)),
+              div({ style: { fontSize: '11px', color: '#9CA3AF' } }, `/${h.maxScore} · ${pct.toFixed(0)}%`)
+            )
+          );
+        })
+      )
+    )
+  );
+}
+
+function renderApiKey() {
+  // Local UI state — track which provider tab is selected within this screen
+  let selProv = CURRENT_PROVIDER;
+  let inputRefs = {};  // provKey -> input element
+
+  function buildScreen() {
+    const prov = PROVIDERS[selProv];
+    const existingKey = API_KEYS[selProv] || '';
+    const existingModel = SELECTED_MODELS[selProv] || prov.defaultModel;
+
+    const container = div({ style: { minHeight: '100vh', background: '#F0F4F8', padding: '24px 16px' } },
+      div({ style: { maxWidth: '480px', margin: '0 auto' } },
+        // Header
+        div({ style: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' } },
+          btn({ class: 'btn-ghost', style: { fontSize: '13px', padding: '5px 10px' }, onClick: () => setState({ screen: 'home' }) }, '← Back'),
+          el('h2', { style: { fontSize: '18px', fontWeight: 700 } }, '🔑 AI Provider & API Key')
+        ),
+
+        // Provider tabs
+        div({ style: { display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' } },
+          Object.entries(PROVIDERS).map(([key, pr]) =>
+            btn({
+              class: 'prov-tab' + (key === selProv ? ' active' : ''),
+              onClick: () => { selProv = key; const root = document.getElementById('root'); root.innerHTML = ''; root.appendChild(buildScreen()); }
+            },
+              pr.short,
+              API_KEYS[key] ? span({ style: { marginLeft: '4px', opacity: .7 } }, '✓') : null
+            )
+          )
+        ),
+
+        // Provider card
+        div({ class: 'card', style: { marginBottom: '14px' } },
+          div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' } },
+            div(null,
+              div({ style: { fontWeight: 700, fontSize: '15px' } }, prov.name),
+              el('a', { href: prov.docsUrl, target: '_blank', style: { fontSize: '12px', color: '#1B4F8A' } }, 'Get API key →')
+            ),
+            existingKey && span({ class: 'badge badge-green' }, '✓ Configured')
+          ),
+
+          // API Key input
+          div({ style: { marginBottom: '12px' } },
+            div({ style: { fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '5px' } }, 'API Key'),
+            (() => {
+              const inp = el('input', {
+                type: 'password',
+                placeholder: prov.placeholder,
+                style: { width: '100%', padding: '10px 12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px', display: 'block' },
+                value: existingKey
+              });
+              inputRefs[selProv] = inp;
+              return inp;
+            })()
+          ),
+
+          // Model selector
+          div({ style: { marginBottom: '14px' } },
+            div({ style: { fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '5px' } }, 'Model'),
+            (() => {
+              const sel = el('select', { style: { padding: '8px 10px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '13px', background: '#fff', color: '#111827', width: '100%' } });
+              prov.models.forEach(m => {
+                const opt = el('option', { value: m }, m);
+                if (m === existingModel) opt.selected = true;
+                sel.appendChild(opt);
+              });
+              inputRefs[selProv + '_model'] = sel;
+              return sel;
+            })()
+          ),
+
+          // Buttons
+          div({ style: { display: 'flex', gap: '8px' } },
+            existingKey && btn({
+              class: 'btn-ghost',
+              style: { color: '#DC2626', borderColor: '#FECACA', fontSize: '13px' },
+              onClick: () => {
+                delete API_KEYS[selProv];
+                localStorage.setItem('bankmock-apikeys', JSON.stringify(API_KEYS));
+                if (CURRENT_PROVIDER === selProv) setCurrentProvider('anthropic');
+                const root = document.getElementById('root'); root.innerHTML = ''; root.appendChild(buildScreen());
+              }
+            }, 'Remove'),
+            btn({
+              class: 'btn-primary', style: { flex: 1 },
+              onClick: () => {
+                const keyVal = (inputRefs[selProv] || document.querySelector('input[type=password]')).value.trim();
+                if (!keyVal) { alert('Please enter an API key.'); return; }
+                const modelVal = (inputRefs[selProv + '_model'] || document.querySelector('select')).value;
+                saveProviderKey(selProv, keyVal);
+                saveProviderModel(selProv, modelVal);
+                setCurrentProvider(selProv);
+                setState({ screen: 'home' });
+              }
+            }, 'Save & Use This Provider')
+          )
+        ),
+
+        // Currently active info
+        div({ style: { fontSize: '12px', color: '#9CA3AF', padding: '8px 0' } },
+          'Active provider: ',
+          span({ style: { fontWeight: 600, color: '#1B4F8A' } }, PROVIDERS[CURRENT_PROVIDER].name),
+          getCurrentApiKey() ? '' : span({ style: { color: '#DC2626' } }, ' — no key set')
+        ),
+
+        // All configured providers summary
+        Object.keys(API_KEYS).length > 0 && div({ style: { marginTop: '8px' } },
+          div({ style: { fontSize: '11px', color: '#9CA3AF', fontWeight: 600, marginBottom: '6px', letterSpacing: '.5px' } }, 'SAVED KEYS'),
+          Object.entries(API_KEYS).filter(([, v]) => v).map(([key]) => {
+            const pr = PROVIDERS[key];
+            return div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid #F3F4F6', fontSize: '12px' } },
+              span({ style: { fontWeight: 500 } }, pr ? pr.name : key),
+              div({ style: { display: 'flex', gap: '6px', alignItems: 'center' } },
+                CURRENT_PROVIDER === key && span({ class: 'badge badge-blue', style: { fontSize: '10px' } }, 'Active'),
+                btn({
+                  style: { background: 'none', border: 'none', fontSize: '12px', color: '#1B4F8A', cursor: 'pointer', padding: '0' },
+                  onClick: () => { setCurrentProvider(key); setState({ screen: 'home' }); }
+                }, 'Use')
+              )
+            );
+          })
+        )
+      )
+    );
+    return container;
+  }
+
+  return buildScreen();
+}
+
+function startLoading(key) {
+  state.examKey = key;
+  const exam = EXAMS[key];
+  state.loadStatus = exam.sections.map(() => 'pending');
+  state.loadError = null;
+  setState({ screen: 'loading' });
+  (async () => {
+    const allQs = [];
+    for (let i = 0; i < exam.sections.length; i++) {
+      const s = exam.sections[i];
+      state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'loading' : v);
+      render();
+      try {
+        const qs = await generateSection(exam.name, s.id, s.count);
+        allQs.push(qs);
+        state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'done' : v);
+        render();
+      } catch (e) {
+        state.loadStatus = state.loadStatus.map((v, j) => j === i ? 'error' : v);
+        state.loadError = `${s.name}: ${e.message}`;
+        render(); return;
+      }
+    }
+    // Init test state
+    state.questions = allQs;
+    state.secIdx = 0; state.qIdx = 0;
+    state.answers_live = exam.sections.map(s => new Array(s.count).fill(null));
+    state.flagged = exam.sections.map(s => new Array(s.count).fill(false));
+    state.visited = exam.sections.map(s => new Array(s.count).fill(false));
+    state.timesLeft = exam.sections.map(s => s.time);
+    state.showPalette = false; state.confirmSubmit = false;
+    setState({ screen: 'test' });
+    startTimer();
+  })();
+}
+
+function renderLoading() {
+  const { examKey, loadStatus, loadError } = state;
+  const exam = EXAMS[examKey];
+  const prov = PROVIDERS[CURRENT_PROVIDER];
+  const doneN = loadStatus.filter(s => s === 'done').length;
+  const pct = loadStatus.length ? doneN / loadStatus.length * 100 : 0;
+  const icons = { pending: '○', loading: '⟳', done: '✓', error: '✗' };
+  const iconColors = { pending: '#9CA3AF', loading: '#93C5FD', done: '#34D399', error: '#F87171' };
+  return div({ class: 'load-screen' },
+    div({ class: 'load-box' },
+      div({ class: 'load-icon' }, '🤖'),
+      el('h2', { style: { fontSize: '22px', fontWeight: 700, marginBottom: '6px' } }, 'Generating questions'),
+      p({ style: { opacity: .6, marginBottom: '4px', fontSize: '13px' } }, `Crafting fresh questions for ${exam.name}…`),
+      p({ style: { opacity: .4, marginBottom: '20px', fontSize: '11px' } }, `via ${prov.name} · ${getCurrentModel()}`),
+      div({ class: 'pb-bg', style: { height: '6px', marginBottom: '20px' } },
+        div({ class: 'pb-fill', style: { width: pct + '%', background: '#F59E0B' } })
+      ),
+      exam.sections.map((s, i) => {
+        const st = loadStatus[i] || 'pending';
+        return div({ class: 'load-section' },
+          span({ style: { fontSize: '18px', color: iconColors[st], animation: st === 'loading' ? 'spin .8s linear infinite' : '', display: 'inline-block', width: '24px', textAlign: 'center' } }, icons[st]),
+          div({ style: { flex: 1 } },
+            div({ style: { fontWeight: 600, fontSize: '14px' } }, s.name),
+            div({ style: { opacity: .5, fontSize: '12px' } }, s.count + ' questions')
+          ),
+          span({ style: { fontSize: '12px', opacity: .6 } }, st === 'loading' ? 'Generating…' : st === 'done' ? 'Ready' : st === 'error' ? 'Failed' : 'Queued')
+        );
+      }),
+      loadError && div({ style: { marginTop: '14px', padding: '12px', background: 'rgba(239,68,68,.2)', border: '1px solid rgba(239,68,68,.4)', borderRadius: '8px', fontSize: '13px', color: '#FCA5A5' } },
+        '⚠️ ' + loadError + ' — refresh to retry.'
+      )
+    )
+  );
+}
+
+function renderTest() {
+  const { examKey, questions, answers_live, flagged, visited, timesLeft, secIdx, qIdx, showPalette, confirmSubmit } = state;
+  const exam = EXAMS[examKey];
+  const sec = exam.sections[secIdx];
+  const tLeft = timesLeft[secIdx];
+  const tPct = tLeft / sec.time;
+  const timerCls = 'timer' + (tPct > 0.4 ? '' : tPct > 0.2 ? ' warn' : ' danger');
+  const curQ = (questions[secIdx] || [])[qIdx];
+  if (!curQ) return div(null, 'Loading...');
+
+  const markVisited = () => {
+    if (!visited[secIdx][qIdx]) { visited[secIdx][qIdx] = true; }
+  };
+  markVisited();
+
+  const setAns = l => {
+    answers_live[secIdx][qIdx] = answers_live[secIdx][qIdx] === l ? null : l;
+    render();
+  };
+  const toggleFlag = () => { flagged[secIdx][qIdx] = !flagged[secIdx][qIdx]; render(); };
+  const goTo = (si, qi) => {
+    state.secIdx = si; state.qIdx = qi;
+    visited[si][qi] = true;
+    render();
+  };
+  const navPrev = () => {
+    if (qIdx > 0) goTo(secIdx, qIdx - 1);
+    else if (secIdx > 0) goTo(secIdx - 1, exam.sections[secIdx - 1].count - 1);
+  };
+  const navNext = () => {
+    if (qIdx < sec.count - 1) goTo(secIdx, qIdx + 1);
+    else if (secIdx < exam.sections.length - 1) goTo(secIdx + 1, 0);
+  };
+  const secAns = si => (answers_live[si] || []).filter(a => a !== null).length;
+  const qCls = (si, qi) => {
+    if (si === secIdx && qi === qIdx) return 'qp-btn cur';
+    if (flagged[si][qi]) return 'qp-btn flagged';
+    if (answers_live[si][qi] !== null) return 'qp-btn ans';
+    if (visited[si][qi]) return 'qp-btn vis';
+    return 'qp-btn';
+  };
+
+  return div({ style: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#F0F4F8', position: 'relative' } },
+    // Top bar
+    div({ class: 'topbar' },
+      div({ style: { display: 'flex', gap: '4px', flex: 1, overflowX: 'auto' } },
+        exam.sections.map((s, i) =>
+          btn({ class: 'sec-tab' + (i === secIdx ? ' active' : ''), onClick: () => goTo(i, 0) },
+            s.name.split(' ')[0],
+            span({ style: { marginLeft: '4px', opacity: .6, fontSize: '11px' } }, `(${secAns(i)}/${s.count})`)
+          )
+        )
+      ),
+      span({ class: timerCls }, fmt(tLeft)),
+      btn({ class: 'btn-danger', style: { fontSize: '12px', padding: '5px 12px', marginLeft: '4px' }, onClick: () => { state.confirmSubmit = true; render(); } }, 'Submit')
+    ),
+    // Sub-bar
+    div({ style: { background: '#fff', borderBottom: '1px solid #E5E7EB', padding: '6px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+      span({ style: { fontSize: '12px', color: '#6B7280' } },
+        `${sec.name} — Q ${qIdx + 1} of ${sec.count}`,
+        flagged[secIdx][qIdx] ? span({ class: 'badge badge-amber', style: { marginLeft: '8px' } }, '🚩 Flagged') : null
+      ),
+      div({ style: { display: 'flex', gap: '6px' } },
+        btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '4px 10px' }, onClick: toggleFlag }, flagged[secIdx][qIdx] ? 'Unflag' : 'Flag'),
+        btn({ class: 'btn-ghost', style: { fontSize: '12px', padding: '4px 10px' }, onClick: () => { state.showPalette = !state.showPalette; render(); } }, '🔢 Palette')
+      )
+    ),
+    // Content row
+    div({ style: { flex: 1, display: 'flex', overflow: 'hidden' } },
+      // Question area
+      div({ style: { flex: 1, overflow: 'auto', padding: '16px' } },
+        div({ class: 'card', style: { marginBottom: '12px' } },
+          div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' } },
+            span({ class: 'badge badge-blue' }, `Q${qIdx + 1}${curQ.topic ? ` · ${curQ.topic}` : ''}`),
+            span({ style: { fontSize: '12px', color: '#9CA3AF' } }, '+1 / –0.25')
+          ),
+          p({ style: { fontSize: '14px', lineHeight: '1.8', color: '#111827', whiteSpace: 'pre-wrap', margin: 0 } }, curQ.q)
+        ),
+        (curQ.opts || []).map((opt, oi) => {
+          const l = LETTERS[oi];
+          const isSel = answers_live[secIdx][qIdx] === l;
+          return btn({ class: 'opt-btn' + (isSel ? ' selected' : ''), onClick: () => setAns(l) },
+            span({ class: 'letter-badge' }, l),
+            span({ style: { flex: 1 } }, opt.replace(/^[A-D]\)\s*/, ''))
+          );
+        }),
+        div({ style: { display: 'flex', gap: '10px', marginTop: '18px', paddingBottom: '16px' } },
+          btn({ class: 'btn-ghost', style: { flex: 1 }, onClick: navPrev, disabled: secIdx === 0 && qIdx === 0 }, '← Prev'),
+          btn({ class: 'btn-primary', style: { flex: 1 }, onClick: navNext, disabled: secIdx === exam.sections.length - 1 && qIdx === sec.count - 1 }, 'Next →')
+        )
+      ),
+      // Palette sidebar
+      showPalette && div({ style: { width: '190px', background: '#fff', borderLeft: '1px solid #E5E7EB', padding: '12px', overflow: 'auto', flexShrink: 0 } },
+        div({ style: { marginBottom: '10px' } },
+          [['qp-btn ans', 'Answered'], ['qp-btn flagged', 'Flagged'], ['qp-btn cur', 'Current'], ['qp-btn vis', 'Visited']].map(([cls, l]) =>
+            div({ style: { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' } },
+              div({ class: cls, style: { width: '16px', height: '16px', fontSize: '8px', pointerEvents: 'none' } }),
+              span({ style: { fontSize: '11px', color: '#6B7280' } }, l)
+            )
+          )
+        ),
+        exam.sections.map((s, si) =>
+          div({ style: { marginBottom: '12px' } },
+            div({ style: { fontSize: '10px', fontWeight: 700, color: '#1B4F8A', marginBottom: '5px', letterSpacing: '.5px' } }, s.name.slice(0, 10).toUpperCase()),
+            div({ style: { display: 'flex', flexWrap: 'wrap', gap: '3px' } },
+              Array.from({ length: s.count }, (_, qi) =>
+                btn({ class: qCls(si, qi), onClick: () => goTo(si, qi) }, qi + 1)
+              )
+            )
+          )
+        )
+      )
+    ),
+    // Submit confirm modal
+    confirmSubmit && div({ class: 'modal-back' },
+      div({ class: 'card', style: { width: 'min(90vw,340px)', padding: '22px' } },
+        el('h3', { style: { fontSize: '16px', fontWeight: 700, marginBottom: '6px' } }, 'Submit test?'),
+        p({ style: { fontSize: '13px', color: '#6B7280', marginBottom: '14px' } }, 'This cannot be undone.'),
+        exam.sections.map((s, si) =>
+          div({ style: { display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #F3F4F6', fontSize: '13px' } },
+            span({ style: { color: '#374151' } }, s.name),
+            span(null, el('strong', { style: { color: '#059669' } }, secAns(si)), span({ style: { color: '#9CA3AF' } }, '/' + s.count))
+          )
+        ),
+        div({ style: { display: 'flex', gap: '8px', marginTop: '16px' } },
+          btn({ class: 'btn-ghost', style: { flex: 1 }, onClick: () => { state.confirmSubmit = false; render(); } }, 'Continue'),
+          btn({ class: 'btn-danger', style: { flex: 1 }, onClick: () => submitTest() }, 'Submit now')
+        )
+      )
+    )
+  );
+}
+
+function renderAnalysis() {
+  const { examKey, questions, answers, revSec, revQ } = state;
+  const exam = EXAMS[examKey];
+  const { sr, tot } = totalResult(examKey, questions, answers);
+  const gc = gradeColor(tot.pct);
+
+  if (revSec !== null) {
+    const q = (questions[revSec] || [])[revQ];
+    const ua = (answers[revSec] || [])[revQ];
+    const ok = ua === q.ans; const skip = ua == null;
+    const s = exam.sections[revSec];
+    return div({ style: { minHeight: '100vh', background: '#F0F4F8' } },
+      div({ class: 'topbar', style: { justifyContent: 'space-between' } },
+        btn({ class: 'btn-ghost', style: { fontSize: '13px', padding: '5px 10px' }, onClick: () => { state.revSec = null; render(); } }, '← Back'),
+        span({ style: { fontSize: '13px', color: '#6B7280' } }, `${s.name} · Q${revQ + 1}/${s.count}`),
+        span({ class: 'badge ' + (skip ? 'badge-gray' : ok ? 'badge-green' : 'badge-red') }, skip ? 'Skipped' : ok ? `+${exam.marking.correct}` : exam.marking.wrong)
+      ),
+      div({ style: { maxWidth: '660px', margin: '0 auto', padding: '16px' } },
+        div({ class: 'card', style: { marginBottom: '10px' } },
+          span({ class: 'badge badge-blue', style: { marginBottom: '10px', display: 'inline-block' } }, `Q${revQ + 1}${q.topic ? ` · ${q.topic}` : ''}`),
+          p({ style: { fontSize: '14px', lineHeight: '1.8', whiteSpace: 'pre-wrap', margin: 0 } }, q.q)
+        ),
+        (q.opts || []).map((opt, oi) => {
+          const l = LETTERS[oi]; const isCorr = l === q.ans; const isUser = l === ua;
+          let cls = 'opt-btn';
+          if (isCorr) cls = 'opt-btn correct-ans';
+          else if (isUser && !ok) cls = 'opt-btn wrong-ans';
+          return div({ class: cls, style: { cursor: 'default' } },
+            span({ class: 'letter-badge' }, l),
+            span({ style: { flex: 1 } }, opt.replace(/^[A-D]\)\s*/, '')),
+            isCorr ? span({ style: { color: '#059669', marginLeft: '4px', fontSize: '12px' } }, '✓ Correct') : null,
+            isUser && !ok ? span({ style: { color: '#DC2626', marginLeft: '4px', fontSize: '12px' } }, '✗ Your answer') : null
+          );
+        }),
+        q.exp && div({ style: { background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '8px', padding: '12px', marginTop: '4px' } },
+          div({ style: { fontSize: '12px', fontWeight: 700, color: '#1B4F8A', marginBottom: '5px' } }, '💡 Explanation'),
+          p({ style: { fontSize: '13px', lineHeight: '1.6', margin: 0 } }, q.exp)
+        ),
+        div({ class: 'card', style: { marginTop: '12px' } },
+          div({ style: { fontSize: '11px', color: '#9CA3AF', fontWeight: 600, marginBottom: '8px' } }, 'JUMP TO QUESTION'),
+          div({ style: { display: 'flex', flexWrap: 'wrap', gap: '4px' } },
+            Array.from({ length: s.count }, (_, qi) => {
+              const a = (answers[revSec] || [])[qi];
+              const qs = (questions[revSec] || [])[qi];
+              const c = qs && a === qs.ans;
+              let cls = 'qp-btn';
+              if (qi === revQ) cls = 'qp-btn cur';
+              else if (a == null) cls = 'qp-btn';
+              else if (c) cls = 'qp-btn ans';
+              else cls = 'qp-btn wrong-rev';
+              return btn({ class: cls, onClick: () => { state.revQ = qi; render(); } }, qi + 1);
+            })
+          )
+        ),
+        div({ style: { display: 'flex', gap: '8px', marginTop: '12px' } },
+          btn({ class: 'btn-ghost', style: { flex: 1 }, onClick: () => { if (revQ > 0) { state.revQ--; render(); } }, disabled: revQ === 0 }, '← Prev'),
+          btn({ class: 'btn-primary', style: { flex: 1 }, onClick: () => { if (revQ < s.count - 1) { state.revQ++; render(); } else { state.revSec = null; render(); } } }, revQ < s.count - 1 ? 'Next →' : 'Done')
+        )
+      )
+    );
+  }
+
+  return div({ style: { minHeight: '100vh', background: '#F0F4F8' } },
+    div({ class: 'topbar', style: { justifyContent: 'space-between' } },
+      div(null,
+        div({ style: { fontWeight: 700, fontSize: '15px' } }, 'Test Analysis'),
+        div({ style: { fontSize: '12px', color: '#9CA3AF' } }, exam.name)
+      ),
+      btn({ class: 'btn-ghost', style: { fontSize: '13px', padding: '5px 12px' }, onClick: () => setState({ screen: 'home' }) }, '🏠 Home')
+    ),
+    div({ style: { maxWidth: '580px', margin: '0 auto', padding: '20px 14px' } },
+      div({ class: 'card', style: { textAlign: 'center', marginBottom: '12px', padding: '24px' } },
+        div({ class: 'score-big', style: { color: gc } }, tot.score.toFixed(2)),
+        div({ style: { color: '#9CA3AF', fontSize: '13px', marginBottom: '16px' } }, `out of ${tot.maxScore}`),
+        div({ style: { display: 'flex', justifyContent: 'center', gap: '24px', flexWrap: 'wrap' } },
+          [
+            { v: tot.correct, l: 'Correct', c: '#059669' },
+            { v: tot.wrong, l: 'Wrong', c: '#DC2626' },
+            { v: tot.skipped, l: 'Skipped', c: '#9CA3AF' },
+            { v: `${(tot.acc * 100).toFixed(0)}%`, l: 'Accuracy', c: '#1B4F8A' }
+          ].map(({ v, l, c }) =>
+            div({ style: { textAlign: 'center' } },
+              div({ style: { fontSize: '22px', fontWeight: 700, color: c } }, v),
+              div({ style: { fontSize: '11px', color: '#9CA3AF' } }, l)
+            )
+          )
+        ),
+        div({ class: 'pb-bg', style: { height: '8px', marginTop: '16px' } },
+          div({ class: 'pb-fill', style: { width: `${Math.max(0, Math.min(100, tot.pct))}%`, background: gc } })
+        ),
+        div({ style: { fontSize: '12px', color: '#9CA3AF', marginTop: '5px' } }, `${tot.pct.toFixed(1)}%`)
+      ),
+      div({ class: 'card', style: { marginBottom: '12px' } },
+        div({ style: { fontWeight: 700, fontSize: '14px', marginBottom: '14px' } }, 'Section performance'),
+        exam.sections.map((s, si) => {
+          const r = sr[si]; const pct = Math.max(0, (r.score / r.maxScore) * 100); const c = gradeColor(pct);
+          return div({ style: { marginBottom: '14px', paddingBottom: '14px', borderBottom: si < exam.sections.length - 1 ? '1px solid #F3F4F6' : 'none' } },
+            div({ style: { display: 'flex', justifyContent: 'space-between', marginBottom: '7px' } },
+              span({ style: { fontWeight: 600, fontSize: '13px' } }, s.name),
+              span({ style: { fontWeight: 700, color: c, fontSize: '14px' } }, `${r.score.toFixed(2)}/${r.maxScore}`)
+            ),
+            div({ class: 'pb-bg', style: { height: '6px', marginBottom: '7px' } },
+              div({ class: 'pb-fill', style: { width: `${pct}%`, background: c } })
+            ),
+            div({ style: { display: 'flex', gap: '10px', fontSize: '12px', color: '#6B7280', flexWrap: 'wrap', alignItems: 'center' } },
+              span({ style: { color: '#059669' } }, `✓ ${r.correct}`),
+              span({ style: { color: '#DC2626' } }, `✗ ${r.wrong}`),
+              span(null, `— ${r.skipped}`),
+              span(null, `Acc: ${(r.acc * 100).toFixed(0)}%`),
+              btn({ class: 'btn-ghost', style: { marginLeft: 'auto', fontSize: '11px', padding: '2px 8px' }, onClick: () => { state.revSec = si; state.revQ = 0; render(); } }, 'Review →')
+            )
+          );
+        })
+      ),
+      div({ style: { display: 'flex', gap: '8px' } },
+        btn({ class: 'btn-ghost', style: { flex: 1, padding: '13px', fontSize: '15px' }, onClick: () => setState({ screen: 'home' }) }, '🏠 Home'),
+        btn({ class: 'btn-primary', style: { flex: 1, padding: '13px', fontSize: '15px' }, onClick: () => startLoading(examKey) }, '🔄 New test')
+      )
+    )
+  );
+}
+
+function renderHistory() {
+  const { history } = state;
+  const avg = history.length ? history.reduce((a, h) => a + (h.score / h.maxScore) * 100, 0) / history.length : 0;
+  const best = history.length ? Math.max(...history.map(h => (h.score / h.maxScore) * 100)) : 0;
+  return div({ style: { minHeight: '100vh', background: '#F0F4F8' } },
+    div({ class: 'topbar' },
+      btn({ class: 'btn-ghost', style: { fontSize: '13px', padding: '5px 10px' }, onClick: () => setState({ screen: 'home' }) }, '← Back'),
+      span({ style: { fontWeight: 700, fontSize: '15px', marginLeft: '8px' } }, 'Test History')
+    ),
+    history.length === 0
+      ? div({ style: { textAlign: 'center', padding: '80px 20px', color: '#9CA3AF' } },
+        div({ style: { fontSize: '48px', marginBottom: '12px' } }, '📋'),
+        div({ style: { fontSize: '16px', fontWeight: 600 } }, 'No tests yet'),
+        div({ style: { fontSize: '13px', marginTop: '4px' } }, 'Complete your first mock to see history here')
+      )
+      : div({ style: { maxWidth: '560px', margin: '0 auto', padding: '20px 14px' } },
+        history.length >= 2 && div({ style: { display: 'flex', gap: '8px', marginBottom: '14px' } },
+          [
+            { v: history.length, l: 'Tests done', c: '#1B4F8A' },
+            { v: `${avg.toFixed(1)}%`, l: 'Average', c: '#D97706' },
+            { v: `${best.toFixed(1)}%`, l: 'Best', c: '#059669' }
+          ].map(({ v, l, c }) =>
+            div({ class: 'card', style: { flex: 1, textAlign: 'center', padding: '10px 8px' } },
+              div({ style: { fontSize: '18px', fontWeight: 700, color: c } }, v),
+              div({ style: { fontSize: '11px', color: '#9CA3AF', marginTop: '2px' } }, l)
+            )
+          )
+        ),
+        history.slice().reverse().map((h, i) => {
+          const pct = (h.score / h.maxScore) * 100;
+          return div({ class: 'card', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' } },
+            div(null,
+              div({ style: { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' } },
+                span({ class: 'badge badge-blue', style: { fontSize: '10px' } }, h.badge),
+                span({ style: { fontSize: '13px', fontWeight: 600 } }, h.examName)
+              ),
+              div({ style: { fontSize: '11px', color: '#9CA3AF' } }, new Date(h.date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })),
+              div({ style: { display: 'flex', gap: '10px', marginTop: '5px', fontSize: '12px' } },
+                span({ style: { color: '#059669' } }, `✓ ${h.correct}`),
+                span({ style: { color: '#DC2626' } }, `✗ ${h.wrong}`),
+                span({ style: { color: '#9CA3AF' } }, `— ${h.skipped}`)
+              )
+            ),
+            div({ style: { textAlign: 'right' } },
+              div({ style: { fontSize: '20px', fontWeight: 700, color: gradeColor(pct) } }, h.score.toFixed(2)),
+              div({ style: { fontSize: '11px', color: '#9CA3AF' } }, `/${h.maxScore} · ${pct.toFixed(0)}%`)
+            )
+          );
+        })
+      )
+  );
+}
+
+// ═══════════════════════════════════════
+// RENDER LOOP
+// ═══════════════════════════════════════
+function render() {
+  const root = document.getElementById('root');
+  const screens = { home: renderHome, apikey: renderApiKey, loading: renderLoading, test: renderTest, analysis: renderAnalysis, history: renderHistory };
+  const fn = screens[state.screen];
+  if (!fn) return;
+  root.innerHTML = '';
+  root.appendChild(fn());
+}
+
+render();
+</script>
+</body>
+</html>
