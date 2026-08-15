@@ -253,14 +253,47 @@ Return ONLY valid JSON array, no markdown:
 [{"q":"full question with all clues","opts":["A) ...","B) ...","C) ...","D) ..."],"ans":"C","exp":"explanation","topic":"Seating"}]`
 };
 
+// Escapes bare control characters inside JSON string values (e.g. raw \n the model emits)
+function fixControlChars(str) {
+  let out = '', inStr = false, esc = false;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i], code = str.charCodeAt(i);
+    if (esc)          { out += ch; esc = false; continue; }
+    if (ch === '\\' && inStr) { out += ch; esc = true; continue; }
+    if (ch === '"')   { inStr = !inStr; out += ch; continue; }
+    if (inStr && code < 0x20) {
+      if      (code === 0x09) out += '\\t';
+      else if (code === 0x0A) out += '\\n';
+      else if (code === 0x0D) out += '\\r';
+      else                    out += '\\u' + code.toString(16).padStart(4, '0');
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function parseQuestions(raw) {
+  const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+  // Attempt 1: direct parse
+  try { const a = JSON.parse(clean); if (Array.isArray(a)) return a; } catch {}
+  // Extract the JSON array from surrounding text
+  const m = clean.match(/\[[\s\S]*\]/);
+  if (!m) throw new Error('No JSON array in response');
+  // Attempt 2: parse extracted block
+  try { const a = JSON.parse(m[0]); if (Array.isArray(a)) return a; } catch {}
+  // Attempt 3: fix bare control characters then parse
+  const a = JSON.parse(fixControlChars(m[0]));
+  if (!Array.isArray(a)) throw new Error('Response is not a JSON array');
+  return a;
+}
+
 async function generateSection(examName, sectionId, count) {
   const prompt = (PROMPTS[sectionId] || PROMPTS.reasoning)(examName, count);
   const provider = PROVIDERS[CURRENT_PROVIDER];
   const text = await provider.call(getCurrentApiKey(), getCurrentModel(), prompt);
-  let arr;
-  try { arr = JSON.parse(text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()); }
-  catch { const m = text.match(/\[[\s\S]*\]/); if (!m) throw new Error('No JSON in response'); arr = JSON.parse(m[0]); }
-  if (!Array.isArray(arr) || !arr.length) throw new Error('Empty question array');
+  const arr = parseQuestions(text);
+  if (!arr.length) throw new Error('Empty question array');
   return arr.slice(0, count).map((q, i) => ({ ...q, id: i, ans: (q.ans || 'A').toUpperCase().charAt(0) }));
 }
 
