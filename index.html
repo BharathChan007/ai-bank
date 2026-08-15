@@ -280,10 +280,16 @@ function parseQuestions(raw) {
   // Extract the JSON array from surrounding text
   const m = clean.match(/\[[\s\S]*\]/);
   if (!m) throw new Error('No JSON array in response');
+  const jsonStr = m[0];
   // Attempt 2: parse extracted block
-  try { const a = JSON.parse(m[0]); if (Array.isArray(a)) return a; } catch {}
-  // Attempt 3: fix bare control characters then parse
-  const a = JSON.parse(fixControlChars(m[0]));
+  try { const a = JSON.parse(jsonStr); if (Array.isArray(a)) return a; } catch {}
+  // Attempt 3: strip trailing commas (e.g. {...}, ] or {...}, })
+  const noTrail = jsonStr.replace(/,\s*([\]}])/g, '$1');
+  try { const a = JSON.parse(noTrail); if (Array.isArray(a)) return a; } catch {}
+  // Attempt 4: fix bare control characters
+  try { const a = JSON.parse(fixControlChars(jsonStr)); if (Array.isArray(a)) return a; } catch {}
+  // Attempt 5: both fixes combined
+  const a = JSON.parse(fixControlChars(noTrail));
   if (!Array.isArray(a)) throw new Error('Response is not a JSON array');
   return a;
 }
